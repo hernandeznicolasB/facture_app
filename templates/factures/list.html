@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Factures — GestoPro{% endblock %}
+{% block content %}
+<div style="margin-top:1.5rem;">
+  <div class="page-header">
+    <h1 class="page-title">Factures <small>{{ page_obj.paginator.count }} au total</small></h1>
+    <a href="{% url 'facture_create' %}" class="btn btn-primary">+ Nouvelle facture</a>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Numéro</th>
+            <th>Client</th>
+            <th>Date</th>
+            <th>Produits</th>
+            <th>Total</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for facture in page_obj %}
+          <tr>
+            <td><span class="badge badge-info mono">{{ facture.numero }}</span></td>
+            <td><strong>{{ facture.client }}</strong></td>
+            <td style="color:var(--text-muted);">{{ facture.date_creation|date:"d/m/Y à H:i" }}</td>
+            <td>{{ facture.nombre_total_produits }} article(s)</td>
+            <td class="mono"><strong>{{ facture.total }} €</strong></td>
+            <td>
+              <div style="display:flex;gap:0.5rem;">
+                <a href="{% url 'facture_detail' facture.pk %}" class="btn btn-secondary btn-sm">Voir</a>
+                <a href="{% url 'facture_delete' facture.pk %}" class="btn btn-danger btn-sm">Supprimer</a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <p>Aucune facture. <a href="{% url 'facture_create' %}">Créer la première</a></p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'pagination.html' %}
+  </div>
+</div>
+{% endblock %}

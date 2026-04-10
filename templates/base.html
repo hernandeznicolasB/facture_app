@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GestoPro{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-brand">Gesto<span>Pro</span></a>
+  <div class="nav-links">
+    <a href="{% url 'produit_list' %}" class="nav-link {% if request.resolver_match.app_name == 'produits' or 'produit' in request.resolver_match.url_name %}active{% endif %}">📦 Produits</a>
+    <a href="{% url 'facture_list' %}" class="nav-link {% if 'facture' in request.resolver_match.url_name %}active{% endif %}">🧾 Factures</a>
+  </div>
+</nav>
+
+<div class="container">
+  {% if messages %}
+  <div class="messages" style="margin-top:1.5rem;">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} produit — GestoPro{% endblock %}
+{% block content %}
+<div style="margin-top:1.5rem; max-width: 560px;">
+  <div class="page-header">
+    <h1 class="page-title">{{ action }} un produit</h1>
+    <a href="{% url 'produit_list' %}" class="btn btn-secondary">← Retour</a>
+  </div>
+
+  <div class="card">
+    <form method="post" class="form-card">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Nom du produit</label>
+        {{ form.nom }}
+        {% if form.nom.errors %}<ul class="errorlist">{% for e in form.nom.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prix (€)</label>
+          {{ form.prix }}
+          {% if form.prix.errors %}<ul class="errorlist">{% for e in form.prix.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Date de péremption</label>
+          {{ form.date_peremption }}
+          {% if form.date_peremption.errors %}<ul class="errorlist">{% for e in form.date_peremption.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+        <button type="submit" class="btn btn-primary">{{ action }} le produit</button>
+        <a href="{% url 'produit_list' %}" class="btn btn-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

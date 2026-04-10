@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load l10n %}
+{% block title %}Nouvelle facture — GestoPro{% endblock %}
+{% block content %}
+<div style="margin-top:1.5rem;">
+  <div class="page-header">
+    <h1 class="page-title">Nouvelle facture</h1>
+    <a href="{% url 'facture_list' %}" class="btn btn-secondary">← Retour</a>
+  </div>
+
+  <form method="post" id="facture-form">
+    {% csrf_token %}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+
+      <!-- Infos client -->
+      <div class="card">
+        <div class="card-header"><strong>Informations client</strong></div>
+        <div class="form-card">
+          <div class="form-group">
+            <label>Nom du client</label>
+            {{ form.client }}
+            {% if form.client.errors %}<ul class="errorlist">{% for e in form.client.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            {{ form.notes }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Récapitulatif -->
+      <div class="card" style="background:var(--accent-light);border-color:rgba(108,99,255,0.25);">
+        <div class="card-header"><strong>Récapitulatif</strong></div>
+        <div class="form-card">
+          <div id="recap-content" style="color:var(--text-muted);font-size:0.9rem;">
+            Ajoutez des produits pour voir le récapitulatif.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lignes de facture -->
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card-header">
+        <strong>Produits de la facture</strong>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-add">+ Ajouter un produit</button>
+      </div>
+      <div class="form-card">
+        {{ formset.management_form }}
+        <div id="formset-container"></div>
+        <p id="empty-msg" style="color:var(--text-muted);font-size:0.9rem;padding:0.5rem 0;display:none;">
+          Cliquez sur "+ Ajouter un produit" pour commencer.
+        </p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:0.75rem;">
+      <button type="submit" class="btn btn-primary">Créer la facture</button>
+      <a href="{% url 'facture_list' %}" class="btn btn-secondary">Annuler</a>
+    </div>
+  </form>
+</div>
+
+<script>
+// {% localize off %} — on désactive la localisation pour le JSON JS
+const PRODUITS = [
+  {% for p in produits %}{"id":{{ p.id }},"nom":"{{ p.nom|escapejs }}","prix":{{ p.prix|unlocalize }}},
+  {% endfor %}
+];
+// {% endlocalize %}
+
+function getTotalForms() {
+  return parseInt(document.getElementById('id_lignes-TOTAL_FORMS').value);
+}
+function setTotalForms(n) {
+  document.getElementById('id_lignes-TOTAL_FORMS').value = n;
+}
+
+function buildOptions() {
+  let html = '<option value="">-- Sélectionner un produit --</option>';
+  PRODUITS.forEach(function(p) {
+    html += '<option value="' + p.id + '" data-prix="' + p.prix + '">' + p.nom + ' — ' + p.prix.toFixed(2) + ' €</option>';
+  });
+  return html;
+}
+
+function ajouterLigne() {
+  var idx = getTotalForms();
+  var container = document.getElementById('formset-container');
+  document.getElementById('empty-msg').style.display = 'none';
+
+  var div = document.createElement('div');
+  div.className = 'formset-item';
+  div.setAttribute('data-index', idx);
+  div.innerHTML =
+    '<div class="formset-header">' +
+      '<span class="formset-num">' + (container.children.length + 1) + '</span>' +
+      '<button type="button" class="delete-btn" onclick="retirerLigne(this)">✕ Retirer</button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">' +
+      '<div class="form-group" style="margin:0;">' +
+        '<label>Produit</label>' +
+        '<select name="lignes-' + idx + '-produit" id="id_lignes-' + idx + '-produit" onchange="updateRecap()">' +
+          buildOptions() +
+        '</select>' +
+      '</div>' +
+      '<div class="form-group" style="margin:0;">' +
+        '<label>Quantité</label>' +
+        '<input type="number" name="lignes-' + idx + '-quantite" id="id_lignes-' + idx + '-quantite" value="1" min="1" oninput="updateRecap()">' +
+      '</div>' +
+    '</div>' +
+    '<input type="hidden" name="lignes-' + idx + '-id" value="">';
+
+  container.appendChild(div);
+  setTotalForms(idx + 1);
+  updateRecap();
+}
+
+function retirerLigne(btn) {
+  var item = btn.closest('.formset-item');
+  item.remove();
+  var items = document.querySelectorAll('#formset-container .formset-item');
+  items.forEach(function(el, newIdx) {
+    el.setAttribute('data-index', newIdx);
+    el.querySelector('.formset-num').textContent = newIdx + 1;
+    el.querySelectorAll('[name]').forEach(function(field) {
+      field.name = field.name.replace(/lignes-\d+-/, 'lignes-' + newIdx + '-');
+      if (field.id) field.id = field.id.replace(/id_lignes-\d+-/, 'id_lignes-' + newIdx + '-');
+    });
+  });
+  setTotalForms(items.length);
+  if (items.length === 0) {
+    document.getElementById('empty-msg').style.display = '';
+  }
+  updateRecap();
+}
+
+function updateRecap() {
+  var items = document.querySelectorAll('#formset-container .formset-item');
+  var lines = [];
+  var total = 0, totalQty = 0;
+
+  items.forEach(function(item) {
+    var sel = item.querySelector('select');
+    if (!sel || !sel.value) return;
+    var opt = sel.options[sel.selectedIndex];
+    var prix = parseFloat(opt.getAttribute('data-prix') || 0);
+    var qtyInput = item.querySelector('input[type="number"]');
+    var qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+    var sous = prix * qty;
+    total += sous;
+    totalQty += qty;
+    lines.push({ nom: opt.text.split(' —')[0].trim(), qty: qty, sous: sous });
+  });
+
+  var recap = document.getElementById('recap-content');
+  if (lines.length === 0) {
+    recap.innerHTML = '<span style="color:var(--text-muted);">Ajoutez des produits pour voir le récapitulatif.</span>';
+    return;
+  }
+  var html = '';
+  lines.forEach(function(l) {
+    html += '<div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.875rem;">' +
+      '<span>' + l.nom + ' × ' + l.qty + '</span>' +
+      '<span class="mono">' + l.sous.toFixed(2) + ' €</span>' +
+    '</div>';
+  });
+  html += '<div style="display:flex;justify-content:space-between;padding:0.75rem 0 0;font-weight:700;">' +
+    '<span>' + totalQty + ' article(s)</span>' +
+    '<span class="mono" style="color:var(--accent);font-size:1.1rem;">' + total.toFixed(2) + ' €</span>' +
+  '</div>';
+  recap.innerHTML = html;
+}
+
+document.getElementById('btn-add').addEventListener('click', ajouterLigne);
+ajouterLigne(); // première ligne au chargement
+</script>
+{% endblock %}

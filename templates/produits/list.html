@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Produits — GestoPro{% endblock %}
+{% block content %}
+<div style="margin-top: 1.5rem;">
+  <div class="page-header">
+    <h1 class="page-title">Produits <small>{{ page_obj.paginator.count }} au total</small></h1>
+    <a href="{% url 'produit_create' %}" class="btn btn-primary">+ Nouveau produit</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <form class="search-bar" method="get">
+        <input type="text" name="search" value="{{ search }}" placeholder="Rechercher un produit...">
+        <button type="submit" class="btn btn-secondary">Rechercher</button>
+        {% if search %}<a href="{% url 'produit_list' %}" class="btn btn-secondary">✕</a>{% endif %}
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nom</th>
+            <th>Prix</th>
+            <th>Date de péremption</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for produit in page_obj %}
+          <tr>
+            <td class="mono" style="color:var(--text-dim);">{{ produit.id }}</td>
+            <td><strong>{{ produit.nom }}</strong></td>
+            <td class="mono">{{ produit.prix }} €</td>
+            <td>{{ produit.date_peremption|date:"d/m/Y" }}</td>
+            <td>
+              {% if produit.est_perime %}
+                <span class="badge badge-danger">Périmé</span>
+              {% else %}
+                <span class="badge badge-success">Valide</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:0.5rem;">
+                <a href="{% url 'produit_edit' produit.pk %}" class="btn btn-secondary btn-sm">Modifier</a>
+                <a href="{% url 'produit_delete' produit.pk %}" class="btn btn-danger btn-sm">Supprimer</a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <p>Aucun produit trouvé.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include 'pagination.html' %}
+  </div>
+</div>
+{% endblock %}

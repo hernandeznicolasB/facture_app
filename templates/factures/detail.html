@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Facture {{ facture.numero }} — GestoPro{% endblock %}
+{% block content %}
+<div style="margin-top:1.5rem;">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Facture <span style="color:var(--accent);">{{ facture.numero }}</span></h1>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.25rem;">
+        Créée le {{ facture.date_creation|date:"d/m/Y à H:i" }}
+      </p>
+    </div>
+    <div style="display:flex;gap:0.75rem;">
+      <a href="{% url 'facture_list' %}" class="btn btn-secondary">← Retour</a>
+      <a href="{% url 'facture_delete' facture.pk %}" class="btn btn-danger">Supprimer</a>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <!-- Colonne principale -->
+    <div>
+      <!-- Infos client -->
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-header"><strong>Informations client</strong></div>
+        <div class="form-card">
+          <div class="info-row">
+            <span class="info-label">Client</span>
+            <strong>{{ facture.client }}</strong>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Numéro de facture</span>
+            <span class="mono badge badge-info">{{ facture.numero }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Date d'émission</span>
+            <span>{{ facture.date_creation|date:"d/m/Y" }}</span>
+          </div>
+          {% if facture.notes %}
+          <div class="info-row" style="flex-direction:column;gap:0.3rem;">
+            <span class="info-label">Notes</span>
+            <span style="font-size:0.9rem;">{{ facture.notes }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Lignes de facture -->
+      <div class="card">
+        <div class="card-header"><strong>Détail des produits</strong></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Prix unit.</th>
+                <th>Quantité</th>
+                <th>Sous-total</th>
+                <th>Péremption</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ligne in facture.lignes.all %}
+              <tr>
+                <td><strong>{{ ligne.produit.nom }}</strong></td>
+                <td class="mono">{{ ligne.prix_unitaire }} €</td>
+                <td>
+                  <span class="badge badge-info">× {{ ligne.quantite }}</span>
+                </td>
+                <td class="mono"><strong>{{ ligne.sous_total }} €</strong></td>
+                <td>
+                  {% if ligne.produit.est_perime %}
+                    <span class="badge badge-danger">Périmé</span>
+                  {% else %}
+                    <span style="color:var(--text-muted);font-size:0.85rem;">{{ ligne.produit.date_peremption|date:"d/m/Y" }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              <tr class="total-row">
+                <td colspan="2">Total</td>
+                <td>{{ facture.nombre_total_produits }} article(s)</td>
+                <td class="mono" colspan="2">{{ facture.total }} €</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne stats -->
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="stat-box accent">
+        <div class="stat-value mono">{{ facture.total }} €</div>
+        <div class="stat-label">Total à payer</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value">{{ facture.lignes.count }}</div>
+        <div class="stat-label">Références produits</div>
+      </div>
+      <div class="stat-box success">
+        <div class="stat-value">{{ facture.nombre_total_produits }}</div>
+        <div class="stat-label">Articles au total</div>
+      </div>
+
+      <div class="card" style="padding:1.25rem;margin-top:0.5rem;">
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Actions</p>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <button onclick="window.print()" class="btn btn-secondary" style="width:100%;justify-content:center;">🖨️ Imprimer</button>
+          <a href="{% url 'facture_list' %}" class="btn btn-secondary" style="width:100%;justify-content:center;">← Toutes les factures</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

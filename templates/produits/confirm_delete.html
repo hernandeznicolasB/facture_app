@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Supprimer produit — GestoPro{% endblock %}
+{% block content %}
+<div style="margin-top:2rem;">
+  <div class="card confirm-card">
+    <div class="form-card" style="text-align:center;">
+
+      {% if lignes %}
+        <div class="confirm-icon">⚠️</div>
+        <h2 style="margin-bottom:0.5rem;">Suppression impossible</h2>
+        <p style="color:var(--text-muted);margin-bottom:1rem;">
+          Le produit <strong>{{ produit.nom }}</strong> est utilisé dans
+          <strong style="color:var(--warning);">{{ lignes.count }} facture(s)</strong> et ne peut pas être supprimé.
+        </p>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:0.75rem 1rem;margin-bottom:1.5rem;text-align:left;">
+          {% for ligne in lignes %}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}font-size:0.875rem;">
+            <span style="color:var(--text-muted);">Facture</span>
+            <a href="{% url 'facture_detail' ligne.facture.pk %}" class="badge badge-info mono">{{ ligne.facture.numero }}</a>
+          </div>
+          {% endfor %}
+        </div>
+        <a href="{% url 'produit_list' %}" class="btn btn-secondary">← Retour à la liste</a>
+
+      {% else %}
+        <div class="confirm-icon">🗑️</div>
+        <h2 style="margin-bottom:0.5rem;">Supprimer ce produit ?</h2>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;">
+          Vous êtes sur le point de supprimer <strong>{{ produit.nom }}</strong>.<br>
+          Cette action est irréversible.
+        </p>
+        <form method="post" style="display:flex;gap:0.75rem;justify-content:center;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+          <a href="{% url 'produit_list' %}" class="btn btn-secondary">Annuler</a>
+        </form>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
