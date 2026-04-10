@@ -22,7 +22,7 @@ Application Django permettant de gérer des produits et de générer des facture
 
 ```bash
 # Cloner le repo
-git clone <url-du-repo>
+git clone https://github.com/hernandeznicolasB/facture_app
 cd facture_app
 
 # Créer un environnement virtuel
